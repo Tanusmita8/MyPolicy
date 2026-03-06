@@ -1,11 +1,13 @@
 # MyPolicy Backend - Insurance Aggregation Platform
 
-> Complete microservices architecture for aggregating insurance policies from multiple insurers with intelligent insights and recommendations.
+> Enterprise-grade microservices architecture for aggregating insurance policies from multiple insurers with intelligent insights, metadata-driven transformations, and AI-powered recommendations.
 
 [![Java](https://img.shields.io/badge/Java-17-orange.svg)](https://www.oracle.com/java/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.1.5-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-blue.svg)](https://www.postgresql.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-6.0+-green.svg)](https://www.mongodb.com/)
+[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
+[![GitHub](https://img.shields.io/badge/GitHub-Repo-black.svg)](https://github.com/danielahmeed/POLICY-AGGRGATE)
 
 ---
 
@@ -66,24 +68,27 @@ Frontend → BFF Service (8080) → [Customer, Policy, Data-Pipeline]
 
 ### Services Overview
 
-| Service                      | Port | Purpose                                                        | Database            |
-| ---------------------------- | ---- | -------------------------------------------------------------- | ------------------- |
-| **BFF Service**              | 8080 | API Gateway & Aggregator                                       | -                   |
-| Customer Service             | 8081 | User Management & Auth                                         | PostgreSQL          |
-| **Data-Pipeline Service** ⭐ | 8082 | **Consolidated**: Ingestion + Metadata + Processing + Matching | PostgreSQL, MongoDB |
-| Policy Service               | 8085 | Policy Storage                                                 | PostgreSQL          |
+| Service                      | Port | Purpose                                                        | Database            | Status  |
+| ---------------------------- | ---- | -------------------------------------------------------------- | ------------------- | ------- |
+| **BFF Service**              | 8080 | API Gateway & Data Aggregator                                  | -                   | ✅ Live |
+| **Customer Service**         | 8081 | User Management & Authentication                               | PostgreSQL          | ✅ Live |
+| **Data-Pipeline Service** ⭐ | 8082 | **Consolidated**: Ingestion + Metadata + Processing + Matching | PostgreSQL, MongoDB | ✅ Live |
+| **Policy Service**           | 8085 | Unified Policy Storage & Retrieval                             | PostgreSQL          | ✅ Live |
+| **Config Service**           | 8888 | Centralized Configuration Management                           | -                   | ✅ Live |
+| **Discovery Service**        | 8761 | Eureka Server (Service Registry)                               | -                   | ✅ Live |
 
-**Consolidation Benefits**:
+**Architecture Highlights**:
 
-- ✅ 43% fewer services (7 → 4)
-- ✅ 60% fewer network calls
-- ✅ 150ms faster processing
-- ✅ Simpler deployment and debugging
+- ✅ **4 Core Services** (BFF + Customer + Data-Pipeline + Policy)
+- ✅ **Consolidated Data-Pipeline**: 60% fewer network calls vs original 7-service architecture
+- ✅ **150ms faster** processing through direct method calls instead of HTTP
+- ✅ **Metadata-Driven**: Add new insurers without code changes
+- ✅ **GitHub Aligned**: Matches [AsherGrayne/Data-pipeline-service](https://github.com/AsherGrayne/Data-pipeline-service) architecture
 
 <details>
 <summary>🔍 Data-Pipeline Service Details (Click to expand)</summary>
 
-The consolidated **Data-Pipeline Service** (port 8082) includes:
+The consolidated **Data-Pipeline Service** (port 8081) includes:
 
 | Module            | Purpose                          | Database   |
 | ----------------- | -------------------------------- | ---------- |
@@ -98,9 +103,74 @@ The consolidated **Data-Pipeline Service** (port 8082) includes:
 
 ---
 
+## ✨ New Features & GitHub Alignment
+
+### Recently Added (GitHub Aligned)
+
+| Component                 | Purpose                                                 | File                                            |
+| ------------------------- | ------------------------------------------------------- | ----------------------------------------------- |
+| **FileProcessingService** | Robust CSV/Excel parsing with header normalization      | `processing/service/FileProcessingService.java` |
+| **StitchingService**      | 3-tier identity matching (PAN → Mobile+DOB → Email+DOB) | `matching/service/StitchingService.java`        |
+| **DataMassagingUtil**     | Final utility class for format standardization          | `common/util/DataMassagingUtil.java`            |
+| **StandardizedRecord**    | Unified data model across all insurers                  | `common/model/StandardizedRecord.java`          |
+
+### Python Data Pipeline Scripts 🐍
+
+Complete data pipeline automation with encryption and monitoring:
+
+```bash
+# 1. Load sample data to MongoDB
+python scripts/load_sample_to_mongo.py
+
+# 2. Standardize insurer data using metadata mappings
+python scripts/metadata_standardization.py
+
+# 3. Stitch policies to customers with AES-256 PII encryption
+python scripts/policy_stitching.py
+
+# 4. Generate coverage advisory & gap analysis
+python scripts/coverage_advisory.py [customer_id]    # Single customer
+python scripts/coverage_advisory.py --all            # All customers
+python scripts/coverage_advisory.py --demo           # Demo mode
+```
+
+---
+
 ## 🚀 Key Features
 
-### 1. **Unified Portfolio View**
+### 1. **Metadata-Driven Data Transformation**
+
+Configuration-based field mapping for unlimited insurer support without code changes.
+
+```json
+{
+  "insurerId": "HDFC_LIFE",
+  "policyType": "TERM_LIFE",
+  "fieldMappings": {
+    "PolicyNumber": "policyNumber",
+    "AnnualPremium": "premiumAmount",
+    "PolicyStartDate": "startDate",
+    "DOB": "dateOfBirth"
+  },
+  "transformRules": {
+    "dateOfBirth": "normalizeDate",
+    "premiumAmount": "normalizeCurrency",
+    "Mobile": "normalizeMobile"
+  }
+}
+```
+
+### 2. **3-Tier Identity Matching Engine**
+
+Intelligent customer resolution using multiple matching rules:
+
+```
+Rule 1: PAN Match (Primary)
+Rule 2: Mobile + DOB Match (Secondary)
+Rule 3: Email + DOB Match (Tertiary)
+```
+
+### 3. **Unified Portfolio View**
 
 Single API call to get complete customer portfolio with all policies and totals.
 
@@ -110,12 +180,12 @@ GET /api/bff/portfolio/{customerId}
 
 **Response**: Customer details + All policies + Aggregated totals
 
-### 2. **Coverage Insights & Recommendations** ⭐
+### 4. **Coverage Insights & Recommendations** ⭐
 
 AI-powered coverage gap analysis with personalized recommendations.
 
 ```http
-GET /api/bff/insights/{customerId}
+GET /api/bff/advisory/{customerId}
 ```
 
 **Features**:
@@ -127,7 +197,7 @@ GET /api/bff/insights/{customerId}
 - Coverage score (0-100)
 - Human-readable advisory
 
-### 3. **Multi-Insurer File Upload**
+### 5. **Multi-Insurer File Upload**
 
 Upload Excel/CSV files from any insurer with automatic data transformation.
 
@@ -142,9 +212,9 @@ POST /api/bff/upload
 - Fuzzy customer matching
 - Job tracking
 
-### 4. **Secure Authentication**
+### 6. **Enterprise Security**
 
-AEC-256 authentication with PII encryption.
+AES-256 encryption with PII protection and JWT authentication.
 
 ```http
 POST /api/bff/auth/login
@@ -336,7 +406,7 @@ curl -X POST http://localhost:8080/api/bff/auth/register -d '{...}'
 curl -X POST http://localhost:8080/api/bff/auth/login -d '{...}'
 
 # 3. Configure metadata (Data-Pipeline Metadata Module)
-curl -X POST http://localhost:8082/api/v1/metadata/config -d '{...}'
+curl -X POST http://localhost:8081/api/v1/metadata/config -d '{...}'
 
 # 4. Upload file
 curl -X POST http://localhost:8080/api/bff/upload -F "file=@policies.xlsx"
@@ -406,7 +476,7 @@ MyPolicy-Backend/
 ├── config-service/           # Centralized Configuration (Port 8888)
 ├── bff-service/              # API Gateway (Port 8080)
 ├── customer-service/         # User Management (Port 8081)
-├── data-pipeline-service/    # Consolidated: Ingestion + Metadata + Processing + Matching (Port 8082)
+├── data-pipeline-service/    # Consolidated: Ingestion + Metadata + Processing + Matching (Port 8081)
 │   ├── Ingestion Module      # File Upload & Batch Processing
 │   ├── Metadata Module       # Field Mappings
 │   ├── Processing Module     # Data Transformation
