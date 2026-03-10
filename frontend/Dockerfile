@@ -3,7 +3,6 @@
 # ----------------------------
 FROM ghcr.io/cirruslabs/flutter:3.41.1 AS build
 
-
 WORKDIR /app
 
 # Copy project files into container
@@ -15,17 +14,19 @@ RUN flutter config --enable-web
 # Get dependencies
 RUN flutter pub get
 
-# Build web in release mode, pointing API base URL to BFF service inside Docker network
-RUN flutter build web --release --dart-define=API_BASE_URL=http://bff-service:8090
-
+# Build web in release mode with API base URL pointing to EC2 public IP
+RUN flutter build web --release --dart-define=API_BASE_URL=http://3.238.175.87:8090
 
 # ----------------------------
 # Stage 2: Serve with Nginx
 # ----------------------------
 FROM nginx:alpine
 
+# Copy built web files into Nginx
 COPY --from=build /app/build/web /usr/share/nginx/html
 
+# Expose port 80 for frontend
 EXPOSE 80
 
+# Start Nginx
 CMD ["nginx", "-g", "daemon off;"]
