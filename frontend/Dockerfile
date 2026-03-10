@@ -15,7 +15,7 @@ RUN flutter config --enable-web
 RUN flutter pub get
 
 # Build web in release mode with API base URL pointing to EC2 public IP
-RUN flutter build web --release --dart-define=API_BASE_URL=http://3.238.175.87:8090
+RUN flutter build web --release --dart-define=API_BASE_URL=http://44.220.47.8:8090
 
 # ----------------------------
 # Stage 2: Serve with Nginx
