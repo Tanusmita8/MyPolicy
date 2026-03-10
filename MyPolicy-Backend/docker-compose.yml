@@ -1,155 +1,95 @@
+version: "3.8"
+
 services:
+
   config-service:
-    build:
-      context: ./config-service
-      dockerfile: Dockerfile
+    image: tanusmita/config-service
     container_name: config-service
     ports:
       - "8889:8888"
     networks:
       - mypolicy-net
-    healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8888/actuator/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
 
   discovery-service:
-    build:
-      context: ./discovery-service
-      dockerfile: Dockerfile
+    image: tanusmita/discovery-service
     container_name: discovery-service
     ports:
       - "8761:8761"
     depends_on:
-      config-service:
-        condition: service_healthy
+      - config-service
     networks:
       - mypolicy-net
-    healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8761/actuator/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 40s
 
   customer-service:
-    build:
-      context: ./customer-service
-      dockerfile: Dockerfile
+    image: tanusmita/customer-service
     container_name: customer-service
     ports:
       - "8081:8081"
     depends_on:
-      config-service:
-        condition: service_healthy
-      discovery-service:
-        condition: service_healthy
+      - config-service
+      - discovery-service
     environment:
       SPRING_CONFIG_IMPORT: optional:configserver:http://admin:config123@config-service:8888
       EUREKA_DEFAULT_ZONE: http://discovery-service:8761/eureka
     networks:
       - mypolicy-net
-    healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8081/actuator/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 60s
 
   policy-service:
-    build:
-      context: ./policy-service
-      dockerfile: Dockerfile
+    image: tanusmita/policy-service
     container_name: policy-service
     ports:
       - "8085:8085"
     depends_on:
-      config-service:
-        condition: service_healthy
-      discovery-service:
-        condition: service_healthy
+      - config-service
+      - discovery-service
     environment:
       SPRING_CONFIG_IMPORT: optional:configserver:http://admin:config123@config-service:8888
       EUREKA_DEFAULT_ZONE: http://discovery-service:8761/eureka
     networks:
       - mypolicy-net
-    healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8085/api/v1/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 60s
 
   data-pipeline-service:
-    build:
-      context: ./data-pipeline-service
-      dockerfile: Dockerfile
+    image: tanusmita/data-pipeline-service
     container_name: data-pipeline-service
     ports:
       - "8082:8082"
     depends_on:
-      config-service:
-        condition: service_healthy
-      discovery-service:
-        condition: service_healthy
+      - config-service
+      - discovery-service
     environment:
       SPRING_CONFIG_IMPORT: optional:configserver:http://admin:config123@config-service:8888
       EUREKA_DEFAULT_ZONE: http://discovery-service:8761/eureka
     networks:
       - mypolicy-net
-    healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8082/actuator/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 60s
 
   bff-service:
-    build:
-      context: ./bff-service
-      dockerfile: Dockerfile
+    image: tanusmita/bff-service
     container_name: bff-service
     ports:
       - "8090:8090"
     depends_on:
-      config-service:
-        condition: service_healthy
-      discovery-service:
-        condition: service_healthy
-      customer-service:
-        condition: service_healthy
-      policy-service:
-        condition: service_healthy
-      data-pipeline-service:
-        condition: service_healthy
+      - config-service
+      - discovery-service
+      - customer-service
+      - policy-service
+      - data-pipeline-service
     environment:
       SPRING_CONFIG_IMPORT: optional:configserver:http://admin:config123@config-service:8888
       EUREKA_DEFAULT_ZONE: http://discovery-service:8761/eureka
       SPRING_PROFILES_ACTIVE: docker
     networks:
       - mypolicy-net
-    healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8090/actuator/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 90s
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: tanusmita/mypolicy-frontend
     container_name: frontend
     ports:
       - "8080:80"
     depends_on:
-      bff-service:
-        condition: service_healthy
+      - bff-service
     networks:
       - mypolicy-net
 
 networks:
   mypolicy-net:
-    driver: bridge
+    driver: bridge 
