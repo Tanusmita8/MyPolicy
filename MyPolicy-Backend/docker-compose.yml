@@ -63,7 +63,7 @@ services:
     environment:
       SPRING_CONFIG_IMPORT: optional:configserver:http://admin:config123@config-service:8888
       EUREKA_DEFAULT_ZONE: http://discovery-service:8761/eureka
-      MONGODB_URI: mongodb+srv://praticks2003_db_user:cPZqSJF3LPPsHSEv@cluster0.enwyvnr.mongodb.net/?retryWrites=true&w=majority
+      SPRING_DATA_MONGODB_URI: mongodb+srv://praticks2003_db_user:cPZqSJF3LPPsHSEv@cluster0.enwyvnr.mongodb.net/?retryWrites=true&w=majority
     networks:
       - mypolicy-net
 
