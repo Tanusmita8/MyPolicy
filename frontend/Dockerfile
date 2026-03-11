@@ -5,17 +5,14 @@ FROM ghcr.io/cirruslabs/flutter:3.41.1 AS build
 
 WORKDIR /app
 
-# Copy project files into container
-COPY . .
-
-# Enable web support
 RUN flutter config --enable-web
 
-# Get dependencies
+COPY pubspec.yaml pubspec.lock ./
 RUN flutter pub get
 
-# API base URL for the BFF (override with --build-arg API_BASE_URL=... if needed)
-ARG API_BASE_URL=http://44.220.47.8:8090
+COPY . .
+
+ARG API_BASE_URL=/api
 RUN flutter build web --release --dart-define=API_BASE_URL=${API_BASE_URL}
 
 # ----------------------------
@@ -23,11 +20,8 @@ RUN flutter build web --release --dart-define=API_BASE_URL=${API_BASE_URL}
 # ----------------------------
 FROM nginx:alpine
 
-# Copy built web files into Nginx
 COPY --from=build /app/build/web /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port 80 for frontend
 EXPOSE 80
-
-# Start Nginx
 CMD ["nginx", "-g", "daemon off;"]
